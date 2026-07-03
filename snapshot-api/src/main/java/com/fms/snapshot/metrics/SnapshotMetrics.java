@@ -41,14 +41,14 @@ public class SnapshotMetrics {
                     double total = h + m.cacheMisses.count();
                     return total == 0 ? 0 : (h / total) * 100;
                 })
-                .description("Snapshot cache hit percentage (0-100)")
+                .description("Snapshot cache hit percentage")
                 .register(registry);
 
         Gauge.builder("fms.snap.data.fresh.ms", this, m -> {
                     long w = m.lastWriteAtMs.get();
                     return w == 0 ? -1 : System.currentTimeMillis() - w;
                 })
-                .description("Snapshot data freshness, ms since last write")
+                .description("Snapshot data fresh in ms")
                 .register(registry);
     }
 

@@ -3,14 +3,8 @@ package com.fms.sdk;
 import lombok.Builder;
 import lombok.Data;
 
-/**
- * SDK config.
- *
- * @author matt.shi
- * @date 2026/07/02
- **/
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class SDKConfig {
 
     private String env;
@@ -21,15 +15,21 @@ public class SDKConfig {
     private long pollIntervalMs;
     private long initialDelayMs;
 
-    public static SDKConfig defaults(String env, String app, String snapshotEndpoint, String redisHost, int redisPort) {
+    /**
+     * for app to set env and app name
+     * @param env
+     * @param app
+     * @return
+     */
+    public static SDKConfig forApp(String env, String app) {
         return SDKConfig.builder()
                 .env(env)
                 .app(app)
-                .snapshotEndpoint(snapshotEndpoint)
-                .redisHost(redisHost)
-                .redisPort(redisPort)
-                .pollIntervalMs(60_000L)
-                .initialDelayMs(0L)
+                .snapshotEndpoint(SDKInfra.snapshotEndpoint())
+                .redisHost(SDKInfra.redisHost())
+                .redisPort(SDKInfra.redisPort())
+                .pollIntervalMs(SDKInfra.pollIntervalMs())
+                .initialDelayMs(SDKInfra.initialDelayMs())
                 .build();
     }
 }

@@ -34,7 +34,9 @@ public class FlagChangeListener {
             ack.acknowledge();
             return;
         }
-        snapshotStore.apply(e); //exception escapes -> DefaultErrorHandler retries; ack never called
+
+        //exception escapes -> DefaultErrorHandler retries; ack never called
+        snapshotStore.apply(e);
         ack.acknowledge();
     }
 }

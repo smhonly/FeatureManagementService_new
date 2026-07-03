@@ -31,8 +31,7 @@ public class SnapshotStore {
         //compare version
         if (existing != null && e.getVersion() != null && existing.getVersion() != null
                 && existing.getVersion() >= e.getVersion()) {
-            log.info("skip stale event, flagKey={} current={} incoming={}",
-                    e.getFlagKey(), existing.getVersion(), e.getVersion());
+            log.info("skip stale event, flagKey={}", e.getFlagKey());
             return;
         }
 
@@ -45,8 +44,7 @@ public class SnapshotStore {
             entry.setVersion(e.getVersion());
             m.put(e.getFlagKey(), entry);
         }
-        log.info("apply flag change, env={}, app={}, flagKey={}, op={}",
-                e.getEnv(), e.getApp(), e.getFlagKey(), e.getOp());
+        log.info("apply flag change, " + e);
         redisCache.write(e.getEnv(), e.getApp(), m);
     }
 }

@@ -38,7 +38,7 @@ public class ExplainServiceImpl implements ExplainService {
 
         EvalContext ctx = toEvalContext(env, app, userinfo);
         boolean enabled = evaluator.isEnabled(flag, ctx);
-        String reason = describe(flag, userinfo == null ? null : userinfo.getUserId(), enabled);
+        String reason = createReason(flag, userinfo == null ? null : userinfo.getUserId(), enabled);
 
         return ExplainDTO.builder()
                 .enabled(enabled)
@@ -106,7 +106,7 @@ public class ExplainServiceImpl implements ExplainService {
         throw new BizException(ErrorCode.INVALID_REQUEST);
     }
 
-    private String describe(Flag flag, String userId, boolean enabled) {
+    private String createReason(Flag flag, String userId, boolean enabled) {
         String type = flag.getType();
         if ("boolean".equals(type)) {
             return "boolean flag, value=" + flag.getValue() + " -> " + enabled;

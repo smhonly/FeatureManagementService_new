@@ -30,8 +30,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
-    @ExceptionHandler(Throwable.class)
-    public ResponseEntity<Map<String, Object>> handleUnknown(Throwable ex) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnknown(Exception ex) {
         log.error("Unhandled exception", ex);
         return body(ErrorCode.INTERNAL_ERROR, ex.getMessage());
     }

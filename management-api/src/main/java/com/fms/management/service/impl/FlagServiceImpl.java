@@ -59,7 +59,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
             throw new BizException(ErrorCode.FLAG_KEY_CONFLICT, req.getFlagKey());
         }
         recordHistory(flag);
-        log.info("Created flag '{}' v={} by {}", flag.getFlagKey(), flag.getVersion(), actor);
+        log.info("Created flag '{}'", flag.getFlagKey());
         return FlagConverter.toDTO(flag);
     }
 
@@ -79,7 +79,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
 
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
-        log.info("Updated flag '{}' v={} by {}", flagKey, saved.getVersion(), actor);
+        log.info("Updated flag '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
 
@@ -91,7 +91,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         existing.setUpdatedBy(actor);
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
-        log.info("Archived flag '{}' by {}", flagKey, actor);
+        log.info("Archived flag '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
 
@@ -103,10 +103,18 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
     @Override
     public PageDTO<FlagDTO> search(String env, String app, String state, String flagType, long current, long size) {
         LambdaQueryWrapper<FlagDO> qw = new LambdaQueryWrapper<>();
-        if (env != null && !env.isBlank()) qw.eq(FlagDO::getEnv, env);
-        if (app != null && !app.isBlank()) qw.eq(FlagDO::getApp, app);
-        if (state != null && !state.isBlank()) qw.eq(FlagDO::getState, state);
-        if (flagType != null && !flagType.isBlank()) qw.eq(FlagDO::getFlagType, flagType);
+        if (env != null && !env.isBlank()) {
+            qw.eq(FlagDO::getEnv, env);
+        }
+        if (app != null && !app.isBlank()) {
+            qw.eq(FlagDO::getApp, app);
+        }
+        if (state != null && !state.isBlank()) {
+            qw.eq(FlagDO::getState, state);
+        }
+        if (flagType != null && !flagType.isBlank()) {
+            qw.eq(FlagDO::getFlagType, flagType);
+        }
         qw.orderByDesc(FlagDO::getUpdatedAt);
 
         IPage<FlagDO> page = page(new Page<>(current, size), qw);
@@ -120,10 +128,10 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         FlagDO existing = find(flagKey);
         if (!"pct".equals(existing.getFlagType())) {
             throw new BizException(ErrorCode.INVALID_REQUEST,
-                    "Rollout update is only valid for pct flags (this flag is '" + existing.getFlagType() + "')");
+                    "Rollout update is only for pct flags.");
         }
 
-        ObjectNode def = asObject(existing.getDefinition());
+        ObjectNode def = toObject(existing.getDefinition());
         def.put("type", "pct");
         def.put("pct", req.getPct());
         if (req.getSalt() != null) {
@@ -137,7 +145,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         existing.setUpdatedBy(actor);
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
-        log.info("Updated rollout '{}' -> {}% by {}", flagKey, req.getPct(), actor);
+        log.info("Updated rollout '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
 
@@ -145,12 +153,13 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
     @Transactional
     public FlagDTO updateTargeting(String flagKey, TargetingRulesDTO req, String actor) {
         FlagDO existing = find(flagKey);
-        if (!"targeting".equals(existing.getFlagType()) && !"pct".equals(existing.getFlagType())) {
+        if (!"targeting".equals(existing.getFlagType())
+                && !"pct".equals(existing.getFlagType())) {
             throw new BizException(ErrorCode.INVALID_REQUEST,
-                    "Targeting update is not valid for flag type '" + existing.getFlagType() + "'");
+                    "Invalid flag type '" + existing.getFlagType() + "'");
         }
 
-        ObjectNode def = asObject(existing.getDefinition());
+        ObjectNode def = toObject(existing.getDefinition());
         def.put("type", existing.getFlagType());
         def.set("rules", req.getRules());
 
@@ -158,7 +167,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         existing.setUpdatedBy(actor);
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
-        log.info("Updated targeting '{}' ({} rules) by {}", flagKey, req.getRules().size(), actor);
+        log.info("Updated targeting '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
 
@@ -191,7 +200,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         return flag;
     }
 
-    private ObjectNode asObject(JsonNode n) {
+    private ObjectNode toObject(JsonNode n) {
         return n instanceof ObjectNode o ? o : JsonNodeFactory.instance.objectNode();
     }
 }

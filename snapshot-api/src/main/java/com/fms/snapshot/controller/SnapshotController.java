@@ -23,8 +23,8 @@ public class SnapshotController {
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public SnapshotResp getSnapshot(
-            @RequestParam("Env") String env,
-            @RequestParam("App") String app) {
+            @RequestParam("env") String env,
+            @RequestParam("app") String app) {
         return snapshotService.get(env, app);
     }
 }

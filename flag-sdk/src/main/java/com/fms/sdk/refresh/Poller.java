@@ -50,7 +50,7 @@ public class Poller {
                 cache.replace(s);
             }
         } catch (Exception e) {
-            log.warn("snapshot poll failed, keep last good copy", e);
+            log.warn("snapshot poll failed", e);
         }
     }
 }

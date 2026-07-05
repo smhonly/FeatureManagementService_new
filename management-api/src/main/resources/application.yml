@@ -9,6 +9,16 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+fms:
+  kafka:
+    topic: ${FMS_KAFKA_TOPIC:fms.snapshot.changed}
+    producer-enabled: ${FMS_KAFKA_PRODUCER_ENABLED:true}
 
 server:
   port: ${SERVER_PORT:8080}

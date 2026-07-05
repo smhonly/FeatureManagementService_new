@@ -18,6 +18,7 @@ import com.fms.management.entity.FlagDO;
 import com.fms.management.entity.FlagHistoryDO;
 import com.fms.management.exception.BizException;
 import com.fms.management.exception.ErrorCode;
+import com.fms.management.kafka.FlagChangePublisher;
 import com.fms.management.mapper.FlagHistoryMapper;
 import com.fms.management.mapper.FlagMapper;
 import com.fms.management.service.FlagService;
@@ -26,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -38,6 +41,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
     private static final String STATE_ARCHIVED = "archived";
 
     private final FlagHistoryMapper flagHistoryMapper;
+    private final FlagChangePublisher flagChangePublisher;
 
     @Override
     @Transactional
@@ -59,6 +63,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
             throw new BizException(ErrorCode.FLAG_KEY_CONFLICT, req.getFlagKey());
         }
         recordHistory(flag);
+        publishAfterCommit(flag, "upsert");
         log.info("Created flag '{}'", flag.getFlagKey());
         return FlagConverter.toDTO(flag);
     }
@@ -78,6 +83,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
 
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
+        publishAfterCommit(saved, "upsert");
         log.info("Updated flag '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
@@ -90,6 +96,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         existing.setUpdatedBy(actor);
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
+        publishAfterCommit(saved, "archived");
         log.info("Archived flag '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
@@ -144,6 +151,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         existing.setUpdatedBy(actor);
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
+        publishAfterCommit(saved, "upsert");
         log.info("Updated rollout '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
@@ -166,6 +174,7 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         existing.setUpdatedBy(actor);
         FlagDO saved = saveOrFail(existing);
         recordHistory(saved);
+        publishAfterCommit(saved, "upsert");
         log.info("Updated targeting '{}'", flagKey);
         return FlagConverter.toDTO(getById(saved.getId()));
     }
@@ -184,6 +193,23 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         flagHistoryMapper.insert(h);
     }
 
+    private void publishAfterCommit(FlagDO flag, String op) {
+        //after flag record saved, CDC will detect and send kafka msg to snapshot-api
+        //CDC is the infra task, no code changes here.
+
+        //For local testing, can send kafka msg directly to snapshot-api
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            flagChangePublisher.publish(flag, op);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                flagChangePublisher.publish(flag, op);
+            }
+        });
+    }
+
     private FlagDO find(String flagKey) {
         FlagDO flag = lambdaQuery().eq(FlagDO::getFlagKey, flagKey).one();
         if (flag == null) {
@@ -193,13 +219,11 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
     }
 
     private FlagDO saveOrFail(FlagDO flag) {
-        save(flag);
-        //after flag record saved, CDC will detect and send kafka msg to snapshot-api
-        //CDC is the infra task, no code changes here.
-
-        //todo: if want to test locally, can send kafka msg directly to snapshot-api
-        //for locally testing, no transactional mq needed.
-
+        if (flag.getId() == null) {
+            save(flag);
+        } else {
+            updateById(flag);
+        }
         return flag;
     }
 

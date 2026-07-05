@@ -43,7 +43,11 @@ public class LocalCache {
             return 0L;
         }
         try {
-            return Long.parseLong(s.getVersion());
+            String ver = s.getVersion();
+            if (ver.startsWith("v")) {
+                ver = ver.substring(1);
+            }
+            return Long.parseLong(ver);
         } catch (NumberFormatException e) {
             log.error("Parse snapshot version={} error", s.getVersion(), e);
             return 0L;

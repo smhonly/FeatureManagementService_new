@@ -194,8 +194,10 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
 
     private FlagDO saveOrFail(FlagDO flag) {
         save(flag);
-        //after flag record saved, CDC will detect and send kafka msg to snapshot-api.
-        //todo: CDC is the infra task, no code changes here.
+        //after flag record saved, CDC will detect and send kafka msg to snapshot-api
+        //CDC is the infra task, no code changes here.
+        //todo: if want to test locally, can send kafka msg directly to snapshot-api
+
         return flag;
     }
 

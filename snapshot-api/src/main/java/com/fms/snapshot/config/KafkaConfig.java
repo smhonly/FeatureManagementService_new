@@ -19,8 +19,8 @@ public class KafkaConfig {
 
     @Bean
     public DefaultErrorHandler kafkaErrorHandler() {
-        //retry every 2s — listener must ack to move on
-        DefaultErrorHandler handler = new DefaultErrorHandler(new FixedBackOff(2000L, Long.MAX_VALUE));
+        //retry 3 times with 2s, then give up
+        DefaultErrorHandler handler = new DefaultErrorHandler(new FixedBackOff(2000L, 3L));
         handler.addNotRetryableExceptions(JsonProcessingException.class);
         return handler;
     }

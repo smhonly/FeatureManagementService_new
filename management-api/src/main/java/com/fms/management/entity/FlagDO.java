@@ -20,16 +20,17 @@ public class FlagDO {
 
     private String app;
 
-    /** boolean / pct / targeting */
+    // boolean or pct or targeting
     private String flagType;
 
-    /** active / archived (soft-delete sentinel) */
+    // active or archived
     private String state;
 
-    /** JSON body, never null. */
+    // JSON body, never null
     @TableField(typeHandler = JsonNodeTypeHandler.class)
     private JsonNode definition;
 
+    //Optimistic Lock
     @Version
     private Long version;
 

@@ -8,6 +8,7 @@ public enum ErrorCode {
 
     FLAG_NOT_FOUND          (HttpStatus.NOT_FOUND,            "FLAG_NOT_FOUND",          "Flag not found"),
     FLAG_KEY_CONFLICT       (HttpStatus.CONFLICT,             "FLAG_KEY_CONFLICT",       "Flag key already exists"),
+    FLAG_VERSION_CONFLICT   (HttpStatus.CONFLICT,             "FLAG_VERSION_CONFLICT",   "Flag version conflict, retry with latest version"),
     INVALID_REQUEST         (HttpStatus.BAD_REQUEST,          "INVALID_REQUEST",         "Invalid request"),
     VALIDATION_FAILED       (HttpStatus.BAD_REQUEST,          "VALIDATION_FAILED",       "Request validation failed"),
     INTERNAL_ERROR          (HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",         "Internal server error");

@@ -74,7 +74,6 @@ public class FlagServiceImpl extends ServiceImpl<FlagMapper, FlagDO> implements 
         if (req.getDescription() != null) {
             existing.setDescription(req.getDescription());
         }
-        existing.setVersion(req.getVersion());
         existing.setUpdatedBy(actor);
 
         FlagDO saved = saveOrFail(existing);

@@ -26,24 +26,23 @@ public class SnapshotStore {
         String scope = e.getEnv() + ":" + e.getApp();
         Map<String, FlagEntry> m = snapshots.computeIfAbsent(scope, k -> new ConcurrentHashMap<>());
 
-        //idempotency, find exist flag
-        FlagEntry existing = m.get(e.getFlagKey());
-        //compare version
-        if (existing != null && e.getVersion() != null && existing.getVersion() != null
-                && existing.getVersion() >= e.getVersion()) {
-            log.info("skip stale event, flagKey={}", e.getFlagKey());
-            return;
-        }
-
-        if ("archived".equals(e.getOp())) {
-            m.remove(e.getFlagKey());
-        } else {
+        m.compute(e.getFlagKey(), (key, existing) -> {
+            if ("archived".equals(e.getOp())) {
+                return null;
+            }
+            //compare 2 versions, apply the new one
+            if (existing != null && e.getVersion() != null && existing.getVersion() != null
+                    && existing.getVersion() >= e.getVersion()) {
+                log.info("skip old event, flagKey={}", e.getFlagKey());
+                return existing;
+            }
             FlagEntry entry = new FlagEntry();
             entry.setKey(e.getFlagKey());
             entry.setDefinition(e.getDefinition());
             entry.setVersion(e.getVersion());
-            m.put(e.getFlagKey(), entry);
-        }
+            return entry;
+        });
+
         log.info("apply flag change, " + e);
         redisCache.write(e.getEnv(), e.getApp(), m);
     }

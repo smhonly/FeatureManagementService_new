@@ -1,6 +1,7 @@
 package com.fms.management.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +19,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BizException.class)
     public ResponseEntity<Map<String, Object>> handleBiz(BizException ex) {
         return body(ex.getErrorCode(), ex.getMessage());
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleOptimisticLock(OptimisticLockingFailureException ex) {
+        return body(ErrorCode.FLAG_VERSION_CONFLICT, ErrorCode.FLAG_VERSION_CONFLICT.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
